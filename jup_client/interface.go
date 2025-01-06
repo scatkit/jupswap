@@ -5,7 +5,7 @@ import(
   "github.com/scatkit/pumpdexer/solana"
 )
 
-type rpcService interface{
+type rpcMethod interface{
   SendTransactionWithOpts(
     ctx context.Context,
 		transaction *solana.Transaction,

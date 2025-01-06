@@ -1,6 +1,6 @@
 package jupcore
 import(
-  stdjson "encoding/json"
+  "encoding/json"
   "net/http"
   "context"
   "bytes"
@@ -12,7 +12,7 @@ import(
 ) 
 
 type SwapRequest_PrioritizationFeeLamports struct{
-  union stdjson.RawMessage
+  union json.RawMessage
 }
 
 func (pFee *SwapRequest_PrioritizationFeeLamports) UnmarshalJSON(b []byte) error{
@@ -27,7 +27,7 @@ func (pFee SwapRequest_PrioritizationFeeLamports) MarshalJSON() ([]byte, error) 
 
 // SwapRequest_ComputeUnitPriceMicroLamports The compute unit price to prioritize the transaction, the additional fee will be `computeUnitLimit (1400000) * computeUnitPriceMicroLamports`. If `auto` is used, Jupiter will automatically set a priority fee and it will be capped at 5,000,000 lamports / 0.005 SOL.
 type SwapRequest_ComputeUnitPriceMicroLamports struct {
-  union stdjson.RawMessage
+  union json.RawMessage
 }
 
 func (t SwapRequest_ComputeUnitPriceMicroLamports) MarshalJSON() ([]byte, error) {
@@ -41,7 +41,7 @@ func (t *SwapRequest_ComputeUnitPriceMicroLamports) UnmarshalJSON(b []byte) erro
 }
 
 type SwapResponse struct{
-  SwapTransaction           string   `json:"swapTransactio"`
+  SwapTransaction           string   `json:"swapTransaction"`
   LastValidBlockHeight      float32  `json:"lastValidBlockHeight"`
   PrioritizationFeeLamports *float32 `json:"prioritizationFeeLamprots"`
   DynamicSlippageReport     *struct{

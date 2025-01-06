@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
+  "time"
+	//"fmt"
 
 	jup "github.com/scatkit/jupswap/jupcore"
+	"github.com/scatkit/jupswap/jup_client"
 	"github.com/scatkit/pumpdexer/solana"
 	//"github.com/davecgh/go-spew/spew"
-	//"github.com/scatkit/pumpdexer/solana"
 )
 
 const URL = "https://quote-api.jup.ag/v6"
@@ -63,5 +64,26 @@ func main() {
 	}
 
 	swap := swapResp.JSON200
-  fmt.Printf("%T",swap)
+  //spew.Dump(swap)
+  
+  wallet, err := jup_client.NewWalletFromPrivateKeyBase58("5rg7jXrAYXoAYt1ARV1RzuRFCsH948MyjMjKVG8Kiw7pdZZ7QBjuJnEfufvukPJ5hLyRHUXkPBuc9mP7AS35i5yC")
+  if err != nil{
+    panic(err)
+  }
+  jClient,err:= jup_client.NewClient(wallet, "https://api.mainnet-beta.solana.com") 
+  if err != nil{
+    panic(err)
+  }
+  
+  signedTx, err := jClient.SendTransactionOnChain(context.Background(), swap.SwapTransaction)
+  if err != nil{
+    panic(err)
+  }
+  
+  time.Sleep(20 * time.Second)
+  
+  _, err = jClient.CheckSignature(context.Background(), signedTx)
+  if err != nil{
+    panic(err)
+  }
 }
