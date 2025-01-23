@@ -134,7 +134,7 @@ type SwapRequest struct{
 	WrapAndUnwrapSol *bool `json:"wrapAndUnwrapSol,omitempty"`
 }
 
-func (cl *jupClient) PostSwapWithResponse(ctx context.Context, reqBody SwapRequest, reqEditors ...RequestEditorFunction) (*PostSwapResponse, error){
+func (cl *JupClient) PostSwapWithResponse(ctx context.Context, reqBody SwapRequest, reqEditors ...RequestEditorFunction) (*PostSwapResponse, error){
   resp, err := cl.PostSwap(ctx, reqBody, reqEditors...)
   if err != nil{
     return nil, err
@@ -163,7 +163,7 @@ func (cl *jupClient) PostSwapWithResponse(ctx context.Context, reqBody SwapReque
   return response, nil
 }
 
-func (cl *jupClient) PostSwap(ctx context.Context, reqBody SwapRequest, reqEditors ...RequestEditorFunction) (*http.Response, error){
+func (cl *JupClient) PostSwap(ctx context.Context, reqBody SwapRequest, reqEditors ...RequestEditorFunction) (*http.Response, error){
   req, err := NewPostSwapRequest(ctx, cl.Endpoint, reqBody)
   if err != nil{
     return nil, err

@@ -60,7 +60,8 @@ type GetQuoteParams struct {
 	// Amount The amount to swap, have to factor in the token decimals.
 	Amount int64 `form:"amount" json:"amount"`
 
-	// SlippageBps The slippage in basis points, 1 basis point is 0.01%. If the output token amount exceeds the slippage then the swap transaction will fail.
+	// SlippageBps The slippage in basis points, 1 basis point is 0.01%.
+  // If the output token amount exceeds the slippage then the swap transaction will fail.
 	SlippageBps *int `form:"slippageBps,omitempty" json:"slippageBps,omitempty"`
 
 	// DynamicSlippage Set to true to indicate the usage of dynamic slippage.
@@ -75,16 +76,22 @@ type GetQuoteParams struct {
 	// MaxAutoSlippageBps Max slippage in basis points for auto slippage calculation. Default is 400.
 	MaxAutoSlippageBps *int `form:"maxAutoSlippageBps,omitempty" json:"maxAutoSlippageBps,omitempty"`
 
-	// SwapMode (ExactIn or ExactOut) Defaults to ExactIn. ExactOut is for supporting use cases where you need an exact token amount, like payments. In this case the slippage is on the input token.
+	// (ExactIn or ExactOut). Defaults to ExactIn. ExactOut is for supporting use cases where you need an exact token amount, 
+  // like payments. In this case the slippage is on the input token.
+  // Ex: I need to spend exactly 1 SOL to get x Bonk. I need get exactly 10 Bonk for sending x SOL.
 	SwapMode *GetQuoteParamsSwapMode `form:"swapMode,omitempty" json:"swapMode,omitempty"`
 
-	// Dexes Default is that all DEXes are included. You can pass in the DEXes that you want to include only and separate them by `,`. You can check out the full list [here](https://quote-api.jup.ag/v6/program-id-to-label).
+	// Default is that all DEXes are included. You can pass in the DEXes that you want to include only and separate them by `,`. 
+  // You can check out the full list [here](https://quote-api.jup.ag/v6/program-id-to-label).
 	Dexes *[]string `form:"dexes,omitempty" json:"dexes,omitempty"`
 
-	// ExcludeDexes Default is that all DEXes are included. You can pass in the DEXes that you want to exclude and separate them by `,`. You can check out the full list [here](https://quote-api.jup.ag/v6/program-id-to-label).
+	// Default is that all DEXes are included.
+  // You can pass in the DEXes that you want to exclude and separate them by `,`. 
+  // You can check out the full list [here](https://quote-api.jup.ag/v6/program-id-to-label).
 	ExcludeDexes *[]string `form:"excludeDexes,omitempty" json:"excludeDexes,omitempty"`
 
-	// RestrictIntermediateTokens Restrict intermediate tokens to a top token set that has stable liquidity. This will help to ease potential high slippage error rate when swapping with minimal impact on pricing.
+	// Restrict intermediate tokens to a top token set that has stable liquidity. 
+  // This will help to ease potential high slippage error rate when swapping with minimal impact on pricing.
 	RestrictIntermediateTokens *bool `form:"restrictIntermediateTokens,omitempty" json:"restrictIntermediateTokens,omitempty"`
 
 	// OnlyDirectRoutes Default is false. Direct Routes limits Jupiter routing to single hop routes only.
@@ -105,11 +112,13 @@ type GetQuoteParams struct {
 	// PreferLiquidDexes Default is false. Enabling it would only consider markets with high liquidity to reduce slippage.
 	PreferLiquidDexes *bool `form:"preferLiquidDexes,omitempty" json:"preferLiquidDexes,omitempty"`
 
-	// TokenCategoryBasedIntermediateTokens Default is false. Uses categorized top token lists as intermediate tokens to optimize routing paths, replacing the old static top token list. This helps achieve better pricing while maintaining route reliability.
+	// Default is false.
+  // Uses categorized top token lists as intermediate tokens to optimize routing paths, replacing the old static top token list.
+  // This helps achieve better pricing while maintaining route reliability.
 	TokenCategoryBasedIntermediateTokens *bool `form:"tokenCategoryBasedIntermediateTokens,omitempty" json:"tokenCategoryBasedIntermediateTokens,omitempty"`
 }
 
-func (cl *jupClient) GetQuoteWithResponse(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFunction) (*GetQuoteResponse, error) {
+func (cl *JupClient) GetQuoteWithResponse(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFunction) (*GetQuoteResponse, error) {
 	resp, err := cl.GetQuote(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -118,7 +127,7 @@ func (cl *jupClient) GetQuoteWithResponse(ctx context.Context, params *GetQuoteP
 	return ParseGetQuoteResponse(resp)
 }
 
-func (cl *jupClient) GetQuote(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFunction) (*http.Response, error) {
+func (cl *JupClient) GetQuote(ctx context.Context, params *GetQuoteParams, reqEditors ...RequestEditorFunction) (*http.Response, error) {
 	req, err := NewQuoteRequest(cl.Endpoint, params)
 	if err != nil {
 		return nil, err
@@ -189,6 +198,20 @@ func NewQuoteRequest(endpoint string, params *GetQuoteParams) (*http.Request, er
 
 		if params.SlippageBps != nil {
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "slippageBps", runtime.ParamLocationQuery, *params.SlippageBps); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for key, val := range parsed {
+					for _, v2 := range val {
+						queryValues.Add(key, v2)
+					}
+				}
+			}
+		}
+    
+		if params.PlatformFeeBps != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "platformFeeBps", runtime.ParamLocationQuery, *params.PlatformFeeBps); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
