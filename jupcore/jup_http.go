@@ -6,7 +6,6 @@ import(
   "strings"
 )
 
-// Abstraction over http client
 type HTTPClient interface{
   Do(req *http.Request) (*http.Response, error)
   CloseIdleConnections()
@@ -14,16 +13,16 @@ type HTTPClient interface{
 
 type RequestEditorFunction func(ctx context.Context, req *http.Request) error
 
-type jupClient struct{
+type ClientOption func(*JupClient) error
+
+type JupClient struct{
   Endpoint        string
   HTTPClient      HTTPClient
   RequestEditors  []RequestEditorFunction
 }
 
-type ClientOption func(*jupClient) error
-
-func NewClient(endpointURL string, opts ...ClientOption) (*jupClient, error){
-  jupCl := &jupClient{
+func NewClient(endpointURL string, opts ...ClientOption) (*JupClient, error){
+  jupCl := &JupClient{
     Endpoint:   endpointURL,
     HTTPClient: &http.Client{},
   }
@@ -43,7 +42,7 @@ func NewClient(endpointURL string, opts ...ClientOption) (*jupClient, error){
   return jupCl, nil
 }
 
-func (cl *jupClient) applyEditors(ctx context.Context, req *http.Request, extraEditors []RequestEditorFunction) error{
+func (cl *JupClient) applyEditors(ctx context.Context, req *http.Request, extraEditors []RequestEditorFunction) error{
   for _, editFunc := range cl.RequestEditors{ // Client's editors
     if err := editFunc(ctx, req); err != nil{
       return err
