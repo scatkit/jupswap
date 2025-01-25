@@ -30,4 +30,4 @@ require (
 )
 
 //replace github.com/scatkit/pumpdexer [v0.0.0-20250101140745-b2f8fd8ca090] => ../pumpdexer
-replace github.com/scatkit/pumpdexer v0.0.0-20250101140745-b2f8fd8ca090 => ../pumpdexer
+replace github.com/scatkit/pumpdexer => ../pumpdexer

@@ -30,6 +30,7 @@ func formatAmount(amountStr string, decimalNum uint) (formattedAmount int64, err
 }
 
 func main() {
+  userPubkey := solana.MustPubkeyFromBase58("CJMTJWF97jd3dspsN5qhPp4EpKBHMTnkRvDkpSHUWSGJ")
   // maybe not return an error
 	jupiterClient, err := jup.NewClient(URL)
 	if err != nil {
@@ -37,6 +38,7 @@ func main() {
 	}
   solClient := rpc.New("https://api.mainnet-beta.solana.com")
   
+  // Selling case
   var inputTokenMint = "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"
   var outputTokenMint = "So11111111111111111111111111111111111111112"
   var inputAmount = "1.394"
@@ -73,59 +75,18 @@ func main() {
     panic("invalid GetQuoteResponse response")
   }
   quote := quoteResp.JSON200
-  spew.Dump(quote)
+  //spew.Dump(quote)
   
+  swapInstrResp, err := jupiterClient. PostSwapInstructionsWithResponse(context.TODO(), jup.SwapInstructionsRequest{
+  	QuoteResponse:             *quote,
+  	UserPublicKey:             userPubkey.String(),
+  })
+  
+  if swapInstrResp.JSON200 == nil {
+  	panic("invalid PostSwapWithResponse{} response")
+  }
+  swapInstr := swapInstrResp.JSON200
+
+  spew.Dump(swapInstr)
 }
-  
 
-
-	// Setting prioritization fees to `Auto`
-	//prioritizationFeeLamports := jup.SwapRequest_PrioritizationFeeLamports{}
-	//if err := prioritizationFeeLamports.UnmarshalJSON([]byte(`"auto"`)); err != nil {
-	//	panic(err)
-	//}
-  //
-
-	//// When enabled, it will do a swap simulation to get the compute unit used and set it in ComputeBudget's compute unit limit.
-	//// This will increase latency slightly since there will be one extra RPC call to simulate this. Default is false.
-	//var DCUL = true
-	//userPubKey := solana.MustPubkeyFromBase58("CJMTJWF97jd3dspsN5qhPp4EpKBHMTnkRvDkpSHUWSGJ")
-
-	//swapResp, err := jupiterClient.PostSwapWithResponse(context.TODO(), jup.SwapRequest{
-	//	PrioritizationFeeLamports: &prioritizationFeeLamports,
-	//	QuoteResponse:             *quote,
-	//	UserPublicKey:             userPubKey.String(),
-	//	DynamicComputeUnitLimit:   &DCUL,
-	//})
-
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	//if swapResp.JSON200 == nil {
-	//	panic("invalid PostSwapWithResponse{} response")
-	//}
-
-	//swap := swapResp.JSON200
-  ////spew.Dump(swap)
-  //
-  //wallet, err := jup_client.NewWalletFromPrivateKeyBase58("5rg7jXrAYXoAYt1ARV1RzuRFCsH948MyjMjKVG8Kiw7pdZZ7QBjuJnEfufvukPJ5hLyRHUXkPBuc9mP7AS35i5yC")
-  //if err != nil{
-  //  panic(err)
-  //}
-  //jClient,err:= jup_client.NewClient(wallet, "https://api.mainnet-beta.solana.com") 
-  //if err != nil{
-  //  panic(err)
-  //}
-  //
-  //signedTx, err := jClient.SendTransactionOnChain(context.Background(), swap.SwapTransaction)
-  //if err != nil{
-  //  panic(err)
-  //}
-  //
-  //time.Sleep(20 * time.Second)
-  //
-  //_, err = jClient.CheckSignature(context.Background(), signedTx)
-  //if err != nil{
-  //  panic(err)
-  //}

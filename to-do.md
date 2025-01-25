@@ -1,12 +1,7 @@
 ## JUPITER-SWAP
- 
-2. Swap
-3. Write tests for sendTransactin
-4. Boot Dev servers*:wq
 
-# TradingPad
-- Production ready trading like BonkBOT
+1. Make GetQuote api -> just fetch the decimal via rpc call for now
+2. Swap instructions api 
+3. Build an Order client API 
 
-# Marketing
-* To get X retweet on twitter @pumpdexer
 

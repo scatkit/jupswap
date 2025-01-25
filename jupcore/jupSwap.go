@@ -197,9 +197,7 @@ func NewPostSwapRequest(ctx context.Context, endpointURL string, reqBody SwapReq
 	if err != nil {
 		return nil, err
 	}
-  
-  //endpointURL += "/swap"
-  request, err := http.NewRequest("POST", queryURL.String(), bytes.NewReader(reqBytes))
+  request, err := http.NewRequestWithContext(ctx, "POST", queryURL.String(), bytes.NewReader(reqBytes))
   
   request.Header.Set("Content-Type", "application/json")
   request.Header.Set("Accept", "application/json")
