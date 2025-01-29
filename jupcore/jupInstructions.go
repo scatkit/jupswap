@@ -23,7 +23,6 @@ type Instruction struct {
 	ProgramId string        `json:"programId"`
 }
 
-
 type SwapInstructionsRequest = SwapRequest
 
 type SwapInstructionsResponse struct{
@@ -120,6 +119,5 @@ func NewPostSwapInstructionsRequest(ctx context.Context, endpointURL string, req
   request.Header.Set("Accept", "application/json")
   
   return request, nil
-
 }
 

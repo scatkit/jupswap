@@ -7,6 +7,7 @@ import (
 	"github.com/scatkit/pumpdexer/solana"
 	"github.com/shopspring/decimal"
   //"github.com/davecgh/go-spew/spew"
+
 )
 
 type Client interface {
@@ -56,7 +57,7 @@ func NewClient(wallet Wallet, rpcEndpoint string, opts ...ClientOption) (Client,
 }
 
 func (cl client) SendTransactionOnChain(ctx context.Context, txBase64 string) (TxID, error) {
-	latestBlockhash, err := cl.clientRPC.GetLatestBlockhash(ctx, "")
+	latestBlockhash, err := cl.clientRPC.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {
 		return "", fmt.Errorf("could not get the latest blockhash: %w", err)
 	}
@@ -78,7 +79,7 @@ func (cl client) SendTransactionOnChain(ctx context.Context, txBase64 string) (T
 	sig, err := cl.clientRPC.SendTransactionWithOpts(ctx, &tx, rpc.TransactionOpts{
 		MaxRetries:          &cl.maxRetries,
 		MinContextSlot:      &latestBlockhash.Context.Slot,
-		PreflightCommitment: rpc.CommitmentProcessed,
+		PreflightCommitment: rpc.CommitmentConfirmed,
 	})
 
 	if err != nil {

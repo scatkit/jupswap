@@ -1,7 +1,4 @@
 ## JUPITER-SWAP
 
-1. Make GetQuote api -> just fetch the decimal via rpc call for now
-2. Swap instructions api 
-3. Build an Order client API 
-
-
+1. Build a versioned transaction from instructions + set jito tip in Jupiter's settings
+2. Build a client api for sending a full transcation

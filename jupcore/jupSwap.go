@@ -174,7 +174,8 @@ func (cl *JupClient) PostSwap(ctx context.Context, reqBody SwapRequest, reqEdito
     return nil, err
   }
   
-  return cl.HTTPClient.Do(req)
+  resp,err := cl.HTTPClient.Do(req)
+  return resp, err
 }
 
 func NewPostSwapRequest(ctx context.Context, endpointURL string, reqBody SwapRequest) (*http.Request, error){

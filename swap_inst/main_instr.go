@@ -8,7 +8,8 @@ import (
   "encoding/json"
   "encoding/base64"
 
-  bin "github.com/gagliardetto/binary"
+  //bin "github.com/gagliardetto/binary"
+  alt "github.com/scatkit/pumpdexer/programs/address-lookup-table"
   "github.com/scatkit/pumpdexer/rpc"
 	jup "github.com/scatkit/jupswap/jupcore"
 	//"github.com/scatkit/jupswap/jup_client"
@@ -20,6 +21,25 @@ import (
 
 const URL = "https://quote-api.jup.ag/v6"
 
+type altOption map[solana.PublicKey]*alt.AddressLookupTableState
+
+type dumbTransactionInstructions struct {
+	accounts  []*solana.AccountMeta
+	data      []byte
+	programID solana.PublicKey
+}
+
+func (t *dumbTransactionInstructions) Accounts() []*solana.AccountMeta{
+	return t.accounts
+}
+
+func (t *dumbTransactionInstructions) ProgramID() solana.PublicKey{
+	return t.programID
+}
+
+func (t *dumbTransactionInstructions) Data() ([]byte, error) {
+	return t.data, nil
+}
 
 func formatAmount(amountStr string, decimalNum uint) (formattedAmount int64, err error){
   amountFloat, err  := dec.NewFromString(amountStr)
@@ -32,7 +52,7 @@ func formatAmount(amountStr string, decimalNum uint) (formattedAmount int64, err
   return amountFloat.Mul(smallestUnitOfToken).IntPart(), nil
 }
 
-func main_tx() {
+func main() {
   userPubkey := solana.MustPubkeyFromBase58("CJMTJWF97jd3dspsN5qhPp4EpKBHMTnkRvDkpSHUWSGJ")
   // maybe not return an error
 	jupiterClient, err := jup.NewClient(URL)
@@ -95,7 +115,7 @@ func main_tx() {
   if err = prioritizationFeeLamports.UnmarshalJSON(bts); err != nil {
 		panic(err)
 	}
-  swapResp, err := jupiterClient.PostSwapWithResponse(context.TODO(), jup.SwapRequest{
+  swapInstrResp, err := jupiterClient.PostSwapInstructionsWithResponse(context.TODO(), jup.SwapInstructionsRequest{
     PrioritizationFeeLamports: &prioritizationFeeLamports,
   	QuoteResponse:             *quote,
   	UserPublicKey:             userPubkey.String(),
@@ -107,76 +127,85 @@ func main_tx() {
     log.Fatal(err)
   }
   
-  if swapResp.JSON200 == nil {
+  if swapInstrResp.JSON200 == nil {
   	panic("invalid PostSwapWithResponse{} response")
   }
-  swap := swapResp.JSON200
-  //spew.Dump(swap)
-  txBytes, err := base64.StdEncoding.DecodeString(swap.SwapTransaction)
-  if err != nil {
-   	log.Fatal(err)
-   }
-  
-  tx, err := solana.TransactionFromDecoder(bin.NewBinDecoder(txBytes))
+  swapInstr := swapInstrResp.JSON200
+  spew.Dump(swapInstr)
+  var output = dumbTransactionInstructions{}
+  err = deserializeInstruction(swapInstr.SwapInstruction, &output)
   if err != nil{
     log.Fatal(err)
   }
+  //spew.Dump(output)
+
+  // DO NOT DELET:
   
-  spew.Dump(tx)
-  //wallet,err := jup_client.NewWalletFromPrivateKeyBase58("5rg7jXrAYXoAYt1ARV1RzuRFCsH948MyjMjKVG8Kiw7pdZZ7QBjuJnEfufvukPJ5hLyRHUXkPBuc9mP7AS35i5yC")
-  //if err != nil{
-  //  log.Fatal(err)
+  //accs := []solana.PublicKey{}
+  //for _,acc := range swapInstr.AddressLookupTableAddresses{
+  //  accs = append(accs, solana.MustPubkeyFromBase58(acc))
   //}
-  //jupsolClient, err := jup_client.NewClient(wallet, "https://api.mainnet-beta.solana.com")
-  //fmt.Println(jupsolClient)
-  //Sign and send the transaction.
-	//signedTx, err := jupsolClient.SendTransactionOnChain(context.TODO(),swap.SwapTransaction)
-	//if err != nil {
-	//	panic(err)
-	//}
   //
-  //fmt.Println(signedTx)
+  //fmt.Println(len(accs))
+  //res_accs, err := solClient.GetMultipleAccounts(context.Background(), accs...) 
+  //
+  //altOpt := map[solana.PublicKey]*alt.AddressLookupTableState{}
+  //for i,acc := range res_accs.Value{
+  //  res, err := alt.DecodeAddressLookupTableState(acc.Data.GetBinary())
+  //  if err != nil{
+  //    panic(err)
+  //  }
+  //  altOpt[accs[i]] = res
+  //}
+  //
+  //spew.Dump(altOpt)
+}
+
+func deserializeALTs(altAddresses []string,
+) (altOption, error){
+  accs := []solana.PublicKey{}
+  for _,acc := range altAddresses{
+    accs = append(accs, solana.MustPubkeyFromBase58(acc))
+  }
   
- // _, err = jupsolClient.CheckSignature(context.TODO(), signedTx)
- // if err != nil {
- // 	panic(err)
- // }
- // 
- // //Sending tx
- // 
- // txMessageBytes, err := tx.Message.MarshalBinary()
- // if err != nil {
- // 	fmt.Errorf("could not serialize transaction: %w", err)
- // }
- // signature, err := privkey.Sign(txMessageBytes)
- // if err != nil {
- // 	fmt.Errorf("could not sign transaction: %w", err)
- // }
- // tx.Signatures = []solana.Signature{signature} 
- // spew.Dump(tx)
- //   privkey := solana.MustPrivkeyFromBase58("5rg7jXrAYXoAYt1ARV1RzuRFCsH948MyjMjKVG8Kiw7pdZZ7QBjuJnEfufvukPJ5hLyRHUXkPBuc9mP7AS35i5yC")
- //   _, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
- //  	if privkey.PublicKey().Equals(key) {
- //  		return &privkey
- //  	}
- //  	return nil
- //  })
- //  if err != nil {
- //  	log.Fatalf("Failed to sign transaction: %v", err)
- //  }
- // 
- //   bhash, err := solClient.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
- //   if err != nil{
- //     log.Fatal(err)
- //   }
- //   tx.Message.RecentBlockhash = bhash.Value.Blockhash
- // 
- // 
- //   spew.Dump(tx)
- //   sig, err := solClient.SendTransaction(context.Background(), tx)
- //   if err != nil{
- //     log.Fatal(err)
- //   }
- //   fmt.Println("Signature",sig)
+  fmt.Println(len(accs))
+  res_accs, err := solClient.GetMultipleAccounts(context.Background(), accs...) 
+  
+  altOpt := map[solana.PublicKey]*alt.AddressLookupTableState{}
+  for i,acc := range res_accs.Value{
+    res, err := alt.DecodeAddressLookupTableState(acc.Data.GetBinary())
+    if err != nil{
+      panic(err)
+    }
+    altOpt[accs[i]] = res
+  }
+  
+  spew.Dump(altOpt)
+
+  
+}
+
+func deserializeInstruction(inst jup.Instruction, out *dumbTransactionInstructions,
+) error{ 
+  if out == nil{
+    return fmt.Errorf("TransactionInstructions cannot be `nil`")
+  }
+  formattedAccs := make([]*solana.AccountMeta, len(inst.Accounts))
+  for i,acc := range inst.Accounts{
+    formattedAccs[i] = &solana.AccountMeta{
+      PublicKey: solana.MustPubkeyFromBase58(acc.Pubkey),
+      IsSigner: acc.IsSigner,
+      IsWritable: acc.IsWritable,
+    }
+  }
+  out.accounts = formattedAccs
+  dataBytes, err := base64.StdEncoding.DecodeString(inst.Data)
+  if err != nil{
+    return fmt.Errorf("Failed to decode data (%s) from instruction: %w",inst.Data, err)
+  }
+  out.data = dataBytes
+  out.programID = solana.MustPubkeyFromBase58(inst.ProgramId)
+  
+  return nil
 }
 
